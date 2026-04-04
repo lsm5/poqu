@@ -7,9 +7,8 @@ metadata:
     build.appstudio.redhat.com/pull_request_number: '{{pull_request_number}}'
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
-    pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch
-      == "rawhide"
-  creationTimestamp: null
+    pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch == "rawhide"
+  creationTimestamp:
   labels:
     appstudio.openshift.io/application: poqu
     appstudio.openshift.io/component: poqu-build
@@ -39,7 +38,7 @@ spec:
         - name: name
           value: show-sbom
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-show-sbom:0.1@sha256:69edfd6862a1837e21325146c1c52acda29838d8eead837a74ed40e91d54cb97
+          value: quay.io/konflux-ci/tekton-catalog/task-show-sbom:0.1@sha256:04994df487ee886adbe60a8a5866647fbdfd53cc26f7b2554272ba51bf7af29e
         - name: kind
           value: task
         resolver: bundles
@@ -58,7 +57,7 @@ spec:
         - name: name
           value: summary
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-summary:0.2@sha256:4b0563bcb5a070b9f7a783bfb831941d4fe5fa42bbb732a63c63f8f7936d4467
+          value: quay.io/konflux-ci/tekton-catalog/task-summary:0.2@sha256:526555c9d77ca9e97c52ee6bfcd097fbedc1f3442084367c936af4faa69951e8
         - name: kind
           value: task
         resolver: bundles
@@ -77,13 +76,11 @@ spec:
       name: output-image
       type: string
     - default: .
-      description: Path to the source code of an application's component from where
-        to build image.
+      description: Path to the source code of an application's component from where to build image.
       name: path-context
       type: string
     - default: Dockerfile
-      description: Path to the Dockerfile inside the context specified by parameter
-        path-context
+      description: Path to the Dockerfile inside the context specified by parameter path-context
       name: dockerfile
       type: string
     - default: "false"
@@ -107,8 +104,7 @@ spec:
       name: java
       type: string
     - default: ""
-      description: Image tag expiration time, time values could be something like
-        1h, 2d, 3w for hours, days, and weeks, respectively.
+      description: Image tag expiration time, time values could be something like 1h, 2d, 3w for hours, days, and weeks, respectively.
       name: image-expires-after
     - default: "false"
       description: Build a source image.
@@ -152,7 +148,7 @@ spec:
         - name: name
           value: init
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-init:0.2@sha256:83b7df553a736def52dd47bca2a3614c8fa2c88d112d691a4834289cf8c2abf5
+          value: quay.io/konflux-ci/tekton-catalog/task-init:0.4@sha256:288f3106118edc1d0f0c79a89c960abf5841a4dd8bc3f38feb10527253105b19
         - name: kind
           value: task
         resolver: bundles
@@ -169,7 +165,7 @@ spec:
         - name: name
           value: git-clone
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-git-clone:0.1@sha256:d5883ad208f2080a6e0225377c05941e29b46bddfbfa0f74f618ca365b0687da
+          value: quay.io/konflux-ci/tekton-catalog/task-git-clone:0.1@sha256:7db7ad9653dccc771407cb0294487cf4be9064fa782ffad7e983db1a8ba57e21
         - name: kind
           value: task
         resolver: bundles
@@ -194,7 +190,7 @@ spec:
         - name: name
           value: prefetch-dependencies
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies:0.1@sha256:c22f2537b73add9b9cef0c1ac92187abb8d265756eaa1e6e568a4f4215720cc3
+          value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies:0.3@sha256:45d2d88ddcc02db4605a4059e034121163458a63b7bb4e179e4402c156f84487
         - name: kind
           value: task
         resolver: bundles
@@ -236,7 +232,7 @@ spec:
         - name: name
           value: buildah
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-buildah:0.1@sha256:0cb9100452e9640adbda75a6e23d2cc9c76d2408cbcf3183543b2a7582e39f02
+          value: quay.io/konflux-ci/tekton-catalog/task-buildah:0.9@sha256:1812ac0d2bf5bcee1b32268ef2ab8d67848c92c9774d8869eb2b21cbff0b87c6
         - name: kind
           value: task
         resolver: bundles
@@ -251,9 +247,11 @@ spec:
     - name: build-source-image
       params:
       - name: BINARY_IMAGE
-        value: $(params.output-image)
+        value: $(tasks.build-container.results.IMAGE_URL)
       - name: BASE_IMAGES
         value: $(tasks.build-container.results.BASE_IMAGES_DIGESTS)
+      - name: BINARY_IMAGE_DIGEST
+        value: $(tasks.build-container.results.IMAGE_DIGEST)
       runAfter:
       - build-container
       taskRef:
@@ -261,7 +259,7 @@ spec:
         - name: name
           value: source-build
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-source-build:0.1@sha256:eacb3f49a4fefc112e5d68f67f9418584e1f942e33b027aaf80612d7eff332d0
+          value: quay.io/konflux-ci/tekton-catalog/task-source-build:0.3@sha256:ac287eb912f442ef67311f6be71ff52d4be71f41d212ca49199a74a4150f84e5
         - name: kind
           value: task
         resolver: bundles
@@ -292,7 +290,7 @@ spec:
         - name: name
           value: deprecated-image-check
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.4@sha256:9d33c7dbb67c8d6580959792cb395790c3bde1ad877d120c9fd62161fc0452a7
+          value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.5@sha256:5ff16b7e6b4a8aa1adb352e74b9f831f77ff97bafd1b89ddb0038d63335f1a67
         - name: kind
           value: task
         resolver: bundles
@@ -314,7 +312,7 @@ spec:
         - name: name
           value: clair-scan
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-clair-scan:0.1@sha256:eed371ce8d1473e31a0befaa60134dedce47debe9527df0932f7fdea6a0c73b9
+          value: quay.io/konflux-ci/tekton-catalog/task-clair-scan:0.3@sha256:3fa03be0280f33d7070ea53f26d53e727199737a7a2b9a59a95071ae40a999ac
         - name: kind
           value: task
         resolver: bundles
@@ -334,7 +332,7 @@ spec:
         - name: name
           value: ecosystem-cert-preflight-checks
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-ecosystem-cert-preflight-checks:0.1@sha256:d56dc78e0699771ef6960eef1618b8068bd1b32557a8eed118453b0316772d7d
+          value: quay.io/konflux-ci/tekton-catalog/task-ecosystem-cert-preflight-checks:0.2@sha256:b4ac586edea81dcd25dfc17f1bd57899825be2b443e48d572cd05ce058f153bb
         - name: kind
           value: task
         resolver: bundles
@@ -351,7 +349,7 @@ spec:
         - name: name
           value: sast-snyk-check
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-sast-snyk-check:0.1@sha256:30b59fff49f73b8b4aa2e622ad095970674b2fd46924f12d26e32ca39443ba8e
+          value: quay.io/konflux-ci/tekton-catalog/task-sast-snyk-check:0.4@sha256:8aa2569982e64204747cde2b61ec47c485555091b57e8821efcfd47f6f90e31d
         - name: kind
           value: task
         resolver: bundles
@@ -376,7 +374,7 @@ spec:
         - name: name
           value: clamav-scan
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-clamav-scan:0.1@sha256:ee0a3a13bc62b4f5cbd3d6adbe351bb414bf4d3b0d8d8d1829878103cfbe2656
+          value: quay.io/konflux-ci/tekton-catalog/task-clamav-scan:0.3@sha256:9f18b216ce71a66909e7cb17d9b34526c02d73cf12884ba32d1f10614f7b9f5a
         - name: kind
           value: task
         resolver: bundles
@@ -398,7 +396,7 @@ spec:
         - name: name
           value: sbom-json-check
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-sbom-json-check:0.1@sha256:5e0f1de336f7ba7c2e15729787d77074911a5fb659419afc9f1cd461ef194625
+          value: quay.io/konflux-ci/tekton-catalog/task-sbom-json-check:0.2@sha256:83127520667f47050e52c5fddd7cc1fd6bfc1bffe52964da882565ce304f54bd
         - name: kind
           value: task
         resolver: bundles
@@ -418,7 +416,7 @@ spec:
         - name: name
           value: apply-tags
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-apply-tags:0.1@sha256:175162b0a1c55e911d0d25ddef97e90932b5043f0b523cf83ed4824363840d74
+          value: quay.io/konflux-ci/tekton-catalog/task-apply-tags:0.3@sha256:aa62b41861c09e2e59c69cc6e9a1f740bf0c81e6a1eb03f57f59dfda0f65840e
         - name: kind
           value: task
         resolver: bundles
@@ -431,7 +429,7 @@ spec:
   - name: workspace
     volumeClaimTemplate:
       metadata:
-        creationTimestamp: null
+        creationTimestamp:
       spec:
         accessModes:
         - ReadWriteOnce
